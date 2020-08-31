@@ -1,0 +1,8 @@
+{
+  "extends": "@tsconfig/node12/tsconfig.json",
+  "include": ["lib/**/*.ts"],
+  "exclude": ["node_modules/**"],
+  "compilerOptions": {
+    "outDir": "build/dist"
+  }
+}
