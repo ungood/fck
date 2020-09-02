@@ -1,2 +1,2 @@
 export * from "./auto-server";
-export * from "./stack";
+export * from "./full-stack";

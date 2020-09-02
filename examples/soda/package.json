@@ -1,0 +1,18 @@
+{
+  "name": "electric-soda",
+  "description": "An example of using F*CK to define a Factorio server cluster.",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "build": "cdk synth > /dev/null"
+  },
+  "dependencies": {
+    "@fck/cdk": "1.61.1",
+    "constructs": "^3.0.4",
+    "monocdk-experiment": "1.61.1"
+  },
+  "devDependencies": {
+    "aws-cdk": "1.61.1",
+    "typescript": "^3.9.7"
+  }
+}

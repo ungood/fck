@@ -1,50 +1,30 @@
 {
   "name": "fck",
-  "version": "1.0.0",
   "description": "F*CK: The Factorio Construction Kit",
-  "license": "MIT",
-  "repository": "https://github.com/YOUR_GITHUB_USER_NAME/fck",
-  "autho": "ungood",
-  "keywords": [],
+  "version": "0.0.0",
+  "private": true,
   "scripts": {
-    "build": "tsc",
-    "watch": "tsc -w",
-    "test": "jest",
-    "cdk": "cdk"
+    "build": "lerna run build",
+    "test": "lerna run test"
   },
-  "dependencies": {
-    "axios": "^0.20.0",
-    "source-map-support": "^0.5.16",
-    "@aws-cdk/core": "1.61.1",
-    "@aws-cdk/aws-autoscaling": "1.61.1",
-    "@aws-cdk/aws-ec2": "1.61.1",
-    "@aws-cdk/aws-ecs": "1.61.1",
-    "@aws-cdk/aws-efs": "1.61.1",
-    "@aws-cdk/aws-iam": "1.61.1"
-  },
+  "workspaces": [
+    "examples/*",
+    "packages/*"
+  ],
   "devDependencies": {
-    "@aws-cdk/assert": "1.61.1",
     "@tsconfig/node12": "^1.0.7",
-    "@types/jest": "^26.0.10",
-    "@types/node": "10.17.27",
-    "aws-cdk": "1.61.1",
     "husky": "^4.2.5",
-    "jest": "^26.4.2",
+    "lerna": "^3.22.1",
     "lint-staged": "^10.2.13",
     "prettier": "^2.1.1",
-    "ts-jest": "^26.2.0",
-    "ts-node": "^8.10.2",
-    "typescript": "^3.9.7",
-    "tslint": "^5.15.0",
-    "tslint-config-prettier": "^1.18.0"
+    "typescript": "^3.9.7"
   },
   "prettier": {
     "printWidth": 120,
     "trailingComma": "all"
   },
   "lint-staged": {
-    "src/**/*.{ts,tsx}": [
-      "tslint --project tsconfig.json -c tslint.commit.json --fix",
+    "**/*.{ts,tsx}": [
       "prettier --write"
     ]
   },
@@ -52,5 +32,8 @@
     "hooks": {
       "pre-commit": "lint-staged"
     }
+  },
+  "dependencies": {
+    "@aws-cdk/core": "latest"
   }
 }

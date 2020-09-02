@@ -1,0 +1,21 @@
+{
+  "name": "@fck/cdk",
+  "description": "F*CK: The Factorio Construction Kit - CDK Constructs",
+  "license": "MIT",
+  "repository": "https://github.com/ungood/fck",
+  "author": "ungood",
+  "keywords": [],
+  "version": "1.61.1",
+  "main": "dist/index.js",
+  "types": "dist/index.d.js",
+  "scripts": {
+    "build": "tsc"
+  },
+  "peerDependencies": {
+    "constructs": "^3.0.4",
+    "monocdk-experiment": "1.61.1"
+  },
+  "devDependencies": {
+    "typescript": "^3.9.7"
+  }
+}

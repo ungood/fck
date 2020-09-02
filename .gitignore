@@ -1,2 +1,8 @@
-build
+# Build artifacts
 node_modules
+dist
+cdk.out
+
+# Yarn
+.yarn
+yarn*.log
