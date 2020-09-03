@@ -4,5 +4,9 @@ dist
 cdk.out
 
 # Yarn
-.yarn
-yarn*.log
+.yarn/*
+!.yarn/releases
+!.yarn/plugins
+!.yarn/sdks
+!.yarn/versions
+.pnp.*

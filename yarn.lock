@@ -24,6 +24,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@aws-cdk/cloud-assembly-schema@npm:1.62.0":
+  version: 1.62.0
+  resolution: "@aws-cdk/cloud-assembly-schema@npm:1.62.0"
+  dependencies:
+    jsonschema: ^1.2.5
+    semver: ^7.2.2
+  checksum: c85396da1e58a87c0beea891655dfd741984a7839dd3b4cc5462b0417bb95dd45e083e6703fac9531aedbf8c94594ba0fc9834db58dafaf75761778fcfdad32c
+  languageName: node
+  linkType: hard
+
 "@aws-cdk/cloudformation-diff@npm:1.61.1":
   version: 1.61.1
   resolution: "@aws-cdk/cloudformation-diff@npm:1.61.1"
@@ -39,19 +49,19 @@ __metadata:
   linkType: hard
 
 "@aws-cdk/core@latest":
-  version: 1.61.1
-  resolution: "@aws-cdk/core@npm:1.61.1"
+  version: 1.62.0
+  resolution: "@aws-cdk/core@npm:1.62.0"
   dependencies:
-    "@aws-cdk/cloud-assembly-schema": 1.61.1
-    "@aws-cdk/cx-api": 1.61.1
+    "@aws-cdk/cloud-assembly-schema": 1.62.0
+    "@aws-cdk/cx-api": 1.62.0
     constructs: ^3.0.4
     fs-extra: ^9.0.1
     minimatch: ^3.0.4
   peerDependencies:
-    "@aws-cdk/cloud-assembly-schema": 1.61.1
-    "@aws-cdk/cx-api": 1.61.1
+    "@aws-cdk/cloud-assembly-schema": 1.62.0
+    "@aws-cdk/cx-api": 1.62.0
     constructs: ^3.0.4
-  checksum: 95aa215203106f3b29473d3bd7bb0ccac7ab45c70c824e474a28a4b52450bebc64cdea314b21e06ec57308369377818885ba6cc0c2d8eb209dc4c879e2024b6a
+  checksum: a9b1eacc53c9892e79e07828899bd215fe1ce62984a31a655eb13fbb883654bf7d5db75c222aa12bfb3940dab9b685a06d93de7a9b370ba01b0a38d2f6d121a3
   languageName: node
   linkType: hard
 
@@ -64,6 +74,18 @@ __metadata:
   peerDependencies:
     "@aws-cdk/cloud-assembly-schema": 1.61.1
   checksum: 1169df2d02d12b4c71f969de524f8064ddc4fbe58d481150c14acb3e75e185f1b9eef4b8728f5a8aa988101286195f7c2ce608c73dced34b56d12f69458c88f9
+  languageName: node
+  linkType: hard
+
+"@aws-cdk/cx-api@npm:1.62.0":
+  version: 1.62.0
+  resolution: "@aws-cdk/cx-api@npm:1.62.0"
+  dependencies:
+    "@aws-cdk/cloud-assembly-schema": 1.62.0
+    semver: ^7.2.2
+  peerDependencies:
+    "@aws-cdk/cloud-assembly-schema": 1.62.0
+  checksum: 8838293b8f5938c39931d73689cf18f92a1a948436e15ce9dc2557b45cc59c9be8c97a5b48c3966ebb2e422edf5f43bcc82d607a5b4bc508ada90f27f5944a37
   languageName: node
   linkType: hard
 
@@ -1186,9 +1208,9 @@ __metadata:
   linkType: hard
 
 "@types/node@npm:*, @types/node@npm:>= 8":
-  version: 14.6.2
-  resolution: "@types/node@npm:14.6.2"
-  checksum: e88f4749fd95d7358a719dee27bb3c02aa7d93a69d95887b4baaeae3fcc21c65d8675e6a9633e499de22fa77651fc12188fd3657a6729dbce9e44a4fe5c0691b
+  version: 14.6.4
+  resolution: "@types/node@npm:14.6.4"
+  checksum: bff274e362080628c96e51b1948be668b68117e35d6353691c753052e490efc0934a0c0a3ba5d2739ac70e745932a9f6b049b7d01a1d96c9ae0c93c3b1b88ed0
   languageName: node
   linkType: hard
 
@@ -1631,8 +1653,8 @@ __metadata:
   linkType: hard
 
 "aws-sdk@npm:^2.739.0":
-  version: 2.744.0
-  resolution: "aws-sdk@npm:2.744.0"
+  version: 2.747.0
+  resolution: "aws-sdk@npm:2.747.0"
   dependencies:
     buffer: 4.9.2
     events: 1.1.1
@@ -1643,7 +1665,7 @@ __metadata:
     url: 0.10.3
     uuid: 3.3.2
     xml2js: 0.4.19
-  checksum: 3a30ab7171f6f8ccd2dfe3bec3a1eb1e0f5304f4e5acbb1a4df52a7cbe4901cb7ab1b0db032d0185356fae59ce72caaeed51a030efdaee6a19f5b7199c20b159
+  checksum: 972f94d0179cd28a89a884edee0a3df7269ceafcdcf77db239ab5321ccc2ebe7a8fc06964991eb106c558c95bff29c1c15bd13a704da58629752b0e58d04b38a
   languageName: node
   linkType: hard
 
@@ -3637,11 +3659,11 @@ __metadata:
   linkType: hard
 
 "git-url-parse@npm:^11.1.2":
-  version: 11.1.3
-  resolution: "git-url-parse@npm:11.1.3"
+  version: 11.2.0
+  resolution: "git-url-parse@npm:11.2.0"
   dependencies:
     git-up: ^4.0.0
-  checksum: c9f06eeb3fc4a5a89e1045fb9d26be314863f5025d7c6ccbd6aa3d8c6ddcb6fa43e7f1f67d05fb4cfaa0a89fd7c54a65bcd55098f474304ac7708648a9b848af
+  checksum: e9919fd1240917f74241a60b571a93e748a9e24648caf96f7b4183bbf44ff7de133a3554e1c3fda6a23e5b3b12ea2316e0f692c03e12ee590cae0a05ebcd5b66
   languageName: node
   linkType: hard
 
@@ -4536,9 +4558,9 @@ __metadata:
   linkType: hard
 
 "json-parse-even-better-errors@npm:^2.3.0":
-  version: 2.3.0
-  resolution: "json-parse-even-better-errors@npm:2.3.0"
-  checksum: 2eae829978b12c0967d0e5869688ef259721d882026bb5faaee0043dcb556bde738692b48dfbff926bd66348c9c18bcf3c2a647c55fbc7ec03945f985b2f6bda
+  version: 2.3.1
+  resolution: "json-parse-even-better-errors@npm:2.3.1"
+  checksum: d89fa7fe57957f3004cf0e786465a64183c0de861f6fda800d352956397c01b22f9feb141d0dce5b23f5dbe0aae74dd5b45fc0c3c1679b0942688efa5544e726
   languageName: node
   linkType: hard
 
@@ -4701,8 +4723,8 @@ __metadata:
   linkType: hard
 
 "lint-staged@npm:^10.2.13":
-  version: 10.2.13
-  resolution: "lint-staged@npm:10.2.13"
+  version: 10.3.0
+  resolution: "lint-staged@npm:10.3.0"
   dependencies:
     chalk: ^4.1.0
     cli-truncate: ^2.1.0
@@ -4721,7 +4743,7 @@ __metadata:
     stringify-object: ^3.3.0
   bin:
     lint-staged: bin/lint-staged.js
-  checksum: ee8fec4a11f1f88991f4071096624daf428a676284a8cf4a3a2d72a1106ff67668115c31ed34a600de13af8f85af279fad73b01960dba7ea3a1c6a4857a6dbb9
+  checksum: 1e8bfa56f4aa817892032fd42cd47dd554121c4f22643a1f11e1879c638784664d83600f2f2304123b89354e8a3365f28435cbe654f92aaa0b6186df99355a00
   languageName: node
   linkType: hard
 
