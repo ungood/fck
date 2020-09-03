@@ -4,7 +4,9 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "build": "cdk synth > /dev/null"
+    "build": "tsc",
+    "deploy": "cdk deploy",
+    "diff": "cdk diff"
   },
   "dependencies": {
     "@fck/cdk": "1.61.1",
@@ -13,6 +15,7 @@
   },
   "devDependencies": {
     "aws-cdk": "1.61.1",
+    "ts-node": "^9.0.0",
     "typescript": "^3.9.7"
   }
 }

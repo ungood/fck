@@ -5,6 +5,8 @@
   "private": true,
   "scripts": {
     "build": "lerna run build",
+    "deploy": "lerna run deploy",
+    "diff": "lerna run diff",
     "test": "lerna run test"
   },
   "workspaces": [

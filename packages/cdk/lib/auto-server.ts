@@ -1,6 +1,5 @@
-import { Aws, Construct, RemovalPolicy, Tags } from "monocdk-experiment";
 import { InstanceType, Port, SubnetType, Vpc } from "monocdk-experiment/aws-ec2";
-import { FileSystem } from "monocdk-experiment/aws-efs";
+import { Aws, Construct, RemovalPolicy, Tags } from "monocdk-experiment";
 import {
   Cluster,
   ContainerImage,
@@ -11,45 +10,45 @@ import {
   Protocol,
   Volume,
 } from "monocdk-experiment/aws-ecs";
-import { AutoScalingGroup, Schedule, ScheduledAction } from "monocdk-experiment/aws-autoscaling";
+import { FileSystem } from "monocdk-experiment/aws-efs";
+import { Effect, Policy, PolicyStatement } from "monocdk-experiment/aws-iam";
+import { AutoScalingGroup } from "monocdk-experiment/aws-autoscaling";
 import { RetentionDays } from "monocdk-experiment/aws-logs";
-import { Effect, IIdentity, ManagedPolicy, PolicyStatement } from "monocdk-experiment/aws-iam";
 
-export interface AutoServerClusterProps {
+export interface AddAutoServerClusterOptions {
+  readonly instanceType: InstanceType;
+
+  // Sets the maximum price (in USD / hour) paid for spot instances in this group.  If undefined, on-demand instances
+  // are used.
+  // Default: undefined
+  spotPrice?: number;
+
+  // The minimum capacity to keep in this ASG.
+  // Default: 0
+  minCapacity?: number;
+
+  // The maximum capacity to keep in this AGS.
+  // Default: 1
+  maxCapacity?: number;
+}
+
+export interface AutoServerClusterProps extends AddAutoServerClusterOptions {
+  // The VPC that resources in this cluster run in.
   readonly vpc: Vpc;
 }
 
-export interface SpotCapacityOptions {
-  readonly instanceType: InstanceType;
-  spotPrice: string;
-  minCapacity?: 0;
-  maxCapacity?: 1;
-}
-
-export interface AutoServerOptions {
-  // The number of vCPUs to reserve for this server.  Must be <= the number of vCPUs in the instance type selected.
-  readonly cpu: number;
-
-  // The amount of memory to reserver for this server;
-  readonly memoryReservationMiB: number;
-
-  // The factorio image to use from: https://hub.docker.com/r/factoriotools/factorio/
-  // Default: stable
-  readonly imageTag?: string;
-
-  // The port to run the factorio server on
-  // Default:
-  readonly serverPort?: number;
-  readonly rconPort?: number;
-}
-
-// An AutoServerCluster is an ECS cluster of EC2 instances that can host multiple factorio servers.
+// An AutoServerCluster is an ECS cluster of EC2 instances that can host multiple Factorio servers.
+// Servers in this cluster share an EFS volume, which is mounted to every instance in the Auto Scaling Group.  This
+// allows an admin to connect to any instance to adminster the server.
+//
+// Servers must each have a unique port and RCON port (if used).
+//
+// Inspired by (stolen from): https://github.com/m-chandler/factorio-spot-pricing/
 export class AutoServerCluster extends Construct {
   readonly cluster: Cluster;
+  readonly autoScalingGroup: AutoScalingGroup;
   readonly fileSystem: FileSystem;
-  readonly adminManagedPolicy: ManagedPolicy;
 
-  private autoScalingGroups = new Array<AutoScalingGroup>();
   private servers = new Array<AutoServer>();
 
   constructor(scope: Construct, id: string, props: AutoServerClusterProps) {
@@ -59,9 +58,47 @@ export class AutoServerCluster extends Construct {
       vpc: props.vpc,
     });
 
-    this.fileSystem = new FileSystem(this, "FileSystem", {
+    this.autoScalingGroup = this.constructAutoScalingGroup(props);
+    this.fileSystem = this.constructFileSystem(props);
+  }
+
+  private constructAutoScalingGroup(props: AutoServerClusterProps) {
+    return this.cluster.addCapacity("ASG", {
+      instanceType: props.instanceType,
+      machineImage: EcsOptimizedImage.amazonLinux2(),
+      associatePublicIpAddress: true,
+      vpcSubnets: { subnetType: SubnetType.PUBLIC },
+      minCapacity: props?.minCapacity || 0,
+      maxCapacity: props?.maxCapacity || 1,
+      spotPrice: props?.spotPrice?.toString(),
+    });
+  }
+
+  private constructFileSystem(props: AutoServerClusterProps) {
+    const fileSystem = new FileSystem(this, "FileSystem", {
       vpc: props.vpc,
       removalPolicy: RemovalPolicy.RETAIN,
+    });
+
+    // 2049 is the NFS port, so this grants the instances in the ASG the ability to mount the EFS filesystem.
+    this.autoScalingGroup.connections.allowTo(fileSystem, Port.tcp(2049), "Allow EFS");
+
+    // Mounts the EFS filesystem to /opt/factorio
+    this.autoScalingGroup.userData.addCommands(
+      "yum install -y amazon-efs-utils", // This is installed by default on AL2 but it doesn't hurt.
+      "mkdir -p /opt/factorio",
+      `mount -t efs ${fileSystem.fileSystemId}:/ /opt/factorio`,
+      "chown 845:845 /opt/factorio", // TODO: What is this magical 845 user?
+    );
+
+    return fileSystem;
+  }
+
+  // Configures the ASG to accept SSH connections with EC2 Instance Connect, and returns a policy that can be attached
+  // to an IIdentity to allow access to the servers.
+  public configureInstanceConnect() {
+    Tags.of(this).add("fck:cluster", this.node.uniqueId, {
+      applyToLaunchedInstances: true,
     });
 
     const allowDescribeInstances = new PolicyStatement({
@@ -81,23 +118,14 @@ export class AutoServerCluster extends Construct {
       },
     });
 
-    this.adminManagedPolicy = new ManagedPolicy(this, "Admin", {
-      description: "Allows ec2-connect-instance to servers in the specified AutoServerCluster.",
+    this.autoScalingGroup.connections.allowFromAnyIpv4(Port.tcp(22), "Allow SSH");
+
+    // This should be installed by default on Amazon Linux 2, but it doesn't hurt.
+    this.autoScalingGroup.userData.addCommands("sudo yum install ec2-instance-connect");
+
+    return new Policy(this, "Admin", {
       statements: [allowDescribeInstances, allowInstanceConnect],
     });
-  }
-
-  // Adds spot instance capacity to the cluster.  Spot instances are terminated if the configured maximum price is
-  // exceeded.
-  public addSpotCapacity(id: string, options: SpotCapacityOptions): SpotCapacity {
-    const asg = new SpotCapacity(this, id, {
-      cluster: this.cluster,
-      ...options,
-    });
-
-    this.cluster.addAutoScalingGroup(asg.autoScalingGroup);
-    this.autoScalingGroups.push(asg.autoScalingGroup);
-    return asg;
   }
 
   public addServer(id: string, options: AutoServerOptions): AutoServer {
@@ -111,80 +139,35 @@ export class AutoServerCluster extends Construct {
     return server;
   }
 
-  public grantAdminAccess(identity: IIdentity) {
-    identity.addManagedPolicy(this.adminManagedPolicy);
-  }
-
-  protected onPrepare(): void {
-    super.onPrepare();
-
+  protected prepare(): void {
     this.servers.forEach((server) => {
-      this.autoScalingGroups.forEach((asg) => {
-        // Ensure all our capacity gets added _before_ we start adding tasks.
-        server.service.node.addDependency(asg);
+      // Ensure all our capacity gets added _before_ we start adding tasks.
+      server.service.node.addDependency(this.autoScalingGroup);
 
-        // Ensure that each server is accessible from the internet.
-        asg.connections.allowFromAnyIpv4(Port.udp(server.serverPort), "Allow Factorio Server");
-        asg.connections.allowFromAnyIpv4(Port.tcp(server.rconPort), "Allow RCON");
-      });
+      // Ensure that each server is accessible from the internet.
+      this.autoScalingGroup.connections.allowFromAnyIpv4(Port.udp(server.serverPort), "Allow Factorio Server");
+      this.autoScalingGroup.connections.allowFromAnyIpv4(Port.tcp(server.rconPort), "Allow RCON");
     });
   }
 }
 
-interface SpotCapacityProps extends SpotCapacityOptions {
-  readonly cluster: Cluster;
-}
+export interface AutoServerOptions {
+  // The number of vCPUs to reserve for this server.  Must be <= the number of vCPUs in the instance type selected.
+  readonly cpu: number;
 
-export class SpotCapacity extends Construct {
-  public readonly autoScalingGroup: AutoScalingGroup;
-  private readonly minCapacity: number;
-  private readonly maxCapacity: number;
+  // The amount of memory to reserved for this server;
+  readonly memoryReservationMiB: number;
 
-  constructor(scope: Construct, id: string, props: SpotCapacityProps) {
-    super(scope, id);
+  // The factorio image to use from: https://hub.docker.com/r/factoriotools/factorio/
+  // Default: stable
+  readonly imageTag?: string;
 
-    this.minCapacity = props?.minCapacity || 0;
-    this.maxCapacity = props?.maxCapacity || 1;
+  // The port the Factorio server listens on.
+  // Default: 34197
+  readonly serverPort?: number;
 
-    this.autoScalingGroup = new AutoScalingGroup(this, "ASG", {
-      vpc: props.cluster.vpc,
-      machineImage: EcsOptimizedImage.amazonLinux2(),
-      associatePublicIpAddress: true,
-      vpcSubnets: { subnetType: SubnetType.PUBLIC },
-      instanceType: props.instanceType,
-      minCapacity: this.minCapacity,
-      maxCapacity: this.maxCapacity,
-      desiredCapacity: this.maxCapacity,
-      spotPrice: props.spotPrice,
-      keyName: "temp_key_pair",
-    });
-
-    // Allows SSM access to instances in this ASG.
-    //const instancePolicy = ManagedPolicy.fromAwsManagedPolicyName('AmazonSSMManagedInstanceCore');
-    //this.autoScalingGroup.role.addManagedPolicy(instancePolicy);
-
-    // TODO: We could filter this to just the EC2 Instance Connect IP Range for increased security (which would
-    // limit SSH access to just the EC2 browser console).
-    this.autoScalingGroup.connections.allowFromAnyIpv4(Port.tcp(22), "Allow SSH");
-
-    Tags.of(this).add("fck:asg", this.node.uniqueId, {
-      applyToLaunchedInstances: true,
-    });
-  }
-
-  public addScheduledActions(enableSchedule: Schedule, disableSchedule: Schedule) {
-    new ScheduledAction(this, "Enable", {
-      autoScalingGroup: this.autoScalingGroup,
-      schedule: enableSchedule,
-      desiredCapacity: this.maxCapacity,
-    });
-
-    new ScheduledAction(this, "Disable", {
-      autoScalingGroup: this.autoScalingGroup,
-      schedule: disableSchedule,
-      desiredCapacity: this.minCapacity,
-    });
-  }
+  // Default: 27015
+  readonly rconPort?: number;
 }
 
 interface AutoServerProps extends AutoServerOptions {
@@ -206,10 +189,11 @@ export class AutoServer extends Construct {
     this.serverPort = props.serverPort || 34197;
     this.rconPort = props.rconPort || 27015;
 
+    // Every server
     const volume: Volume = {
       name: "FactorioVolume",
-      efsVolumeConfiguration: {
-        fileSystemId: props.fileSystem.fileSystemId,
+      host: {
+        sourcePath: `/opt/factorio/${id}`,
       },
     };
 
@@ -223,7 +207,7 @@ export class AutoServer extends Construct {
       image: ContainerImage.fromRegistry(`factoriotools/factorio:${this.imageTag}`),
       logging: LogDrivers.awsLogs({
         streamPrefix: id,
-        logRetention: RetentionDays.FIVE_DAYS,
+        logRetention: RetentionDays.ONE_MONTH,
       }),
     });
 
@@ -245,7 +229,5 @@ export class AutoServer extends Construct {
       maxHealthyPercent: 100,
       minHealthyPercent: 0,
     });
-
-    props.fileSystem.connections.allowFrom(this.service, Port.tcp(2049), "Allow EFS");
   }
 }
